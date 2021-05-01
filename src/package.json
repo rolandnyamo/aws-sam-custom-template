@@ -1,0 +1,9 @@
+{
+    "name": "mimbbo-waitlist",
+    "description": "users can signup to be added and removed from this waitlist",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "aws-sdk": "^2.736.0"
+    }
+}

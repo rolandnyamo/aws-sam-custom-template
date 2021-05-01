@@ -1,0 +1,176 @@
+openapi: "3.0.1"
+info:
+  title: "<app_name>-${MyEnvironment}"
+  version: "2020-08-17T17:48:10Z"
+servers:
+- url: "<api_fqdn>/${MyEnvironment}"
+  variables:
+    basePath:
+      default: ${MyEnvironment}
+paths:
+  /:
+    post:
+      responses:
+        200:
+          description: "200 response"
+          content: {}
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+        406:
+          description: "406 response"
+          content: {}
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+      security:
+      - api_key: []
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${<function_name>.Arn}:${MyEnvironment}/invocations
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
+    delete:
+      responses:
+        200:
+          description: "200 response"
+          content: {}
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+        406:
+          description: "406 response"
+          content: {}
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+      security:
+      - api_key: []
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${<function_name>.Arn}:${MyEnvironment}/invocations
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
+    options:
+      responses:
+        200:
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Empty"
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'DELETE,OPTIONS,POST'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,authenticationtoken,access-control-allow-methods,access-control-allow-headers'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json: "{\"statusCode\": 200}"
+        passthroughBehavior: "when_no_match"
+        type: "mock"
+  /<other_path>:
+    get:
+      responses:
+        200:
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+          content: {}
+        406:
+          description: "406 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+          content: {}
+      security:
+      - api_key: []
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${function_name.Arn}:${MyEnvironment}/invocations
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
+    options:
+      responses:
+        200:
+          description: "200 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Empty"
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,Access-Control-Allow-Origin,authenticationtoken'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json: "{\"statusCode\": 200}"
+        passthroughBehavior: "when_no_match"
+        type: "mock"
+components:
+  schemas:
+    Empty:
+      title: "Empty Schema"
+      type: "object"
+  securitySchemes:
+    api_key:
+      type: "apiKey"
+      name: "x-api-key"
+      in: "header"
+x-amazon-apigateway-request-validators:
+  Validate body:
+    validateRequestParameters: false
+    validateRequestBody: false

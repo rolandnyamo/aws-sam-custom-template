@@ -1,0 +1,12 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "mimbbo-waitlist-stack"
+s3_bucket = "mimbbo-waitlist-sam-cli-managed-default-stack"
+s3_prefix = "mimbbo-waitlist"
+region = "us-east-1"
+profile = "mimbbo"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM"
+

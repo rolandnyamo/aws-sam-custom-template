@@ -1,0 +1,163 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  <Some description here>
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+  - AWS::Serverless-2016-10-31
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Globals:
+  Function:
+    Runtime: nodejs12.x
+
+Resources:
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+  # This is the waitlist API
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-api.html
+  <api_name>:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name:
+        !Join
+        - '-'
+        - - <api_name>
+          - !Ref MyEnvironment
+      Tags:
+        Environment: 
+          Ref: MyEnvironment
+      EndpointConfiguration: REGIONAL #| EDGE
+      StageName:
+        Ref: MyEnvironment
+      Auth:
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          UsagePlanName: !Sub <prefix>_${MyEnvironment}_plan
+          Description: !Sub Usage plan for ${MyEnvironment} API
+          Quota:
+            Limit: !Ref ApiQuotaLimit
+            Period: !Ref ApiQuotaPeriod
+          Throttle:
+            BurstLimit: !Ref ApiThrottleBurstLimit
+            RateLimit: !Ref ApiThrottleRateLimit
+          Tags:
+            - Key: Environment
+              Value: !Ref MyEnvironment 
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: ./files/<api_file_name>.yaml
+      MethodSettings: # allows logging to happen on the API
+        - LoggingLevel: INFO
+          ResourcePath: "/*" # allows for logging on any resource
+          HttpMethod: "*" # allows for logging on any method
+
+  <api_name>Mapping:
+      Type: 'AWS::ApiGateway::BasePathMapping'
+      Properties:
+        BasePath: !Ref MyEnvironment
+        DomainName: !Ref ApiCustomDomain
+        RestApiId: !Ref <api_name>
+        Stage: !Ref <api_name>.Stage #without this cloudformation will try to create the mapping before the api stage is created and it'll all fail.
+
+  <api_name>LogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: [ <api_name> ]
+    Properties:
+      LogGroupName: !Sub API-Gateway-Execution-Logs_${<api_name>}/${MyEnvironment}
+      RetentionInDays: 5
+
+  <function_name>LogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: [ <function_name> ]
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${<function_name>}
+      RetentionInDays: 5
+
+  <function_name>:
+    Type: AWS::Serverless::Function
+    Properties:
+      Tags:
+        Environment: 
+          Ref: MyEnvironment
+      FunctionName:
+        !Join
+        - '-'
+        - - <function_name>
+          - !Ref MyEnvironment
+      Handler: handlers/<lambda_function_name>.handler
+      CodeUri: ./src
+      Runtime: nodejs12.x
+      AutoPublishAlias:
+        Ref: MyEnvironment
+      MemorySize: 128
+      Timeout: 100
+      Description:
+        !Join
+        - ': '
+        - - !Ref MyEnvironment
+          - Add a description please**.
+      Events:
+        AddUser:
+          Type: Api
+          Properties:
+            Path: /<api_method_path> #ex.  /, /users, etc
+            Method: GET
+            RestApiId:
+              Ref: <api_name>
+      Policies:
+        # Give Lambda basic execution Permission to the helloFromLambda
+        - AWSLambdaBasicExecutionRole
+        - Version: "2012-10-17" # Policy Document
+          Statement: # This policy allows full access to dynamodb and event bridge (should probably be fine tuned)
+            - Effect: Allow
+              Action:
+                - dynamodb:*
+                - events:*
+                - SES:*
+              Resource:
+                - "*"
+      Environment:
+        Variables:
+          waitlistTable: !Sub <prefix>_${MyEnvironment}
+          eventBusName: customer-events
+          eventName: <prefix>_addentry
+
+Parameters:
+  MyEnvironment:
+    Type: String
+    Default: staging
+    AllowedValues:
+      - dev
+      - prod
+    Description: Stack resources environment
+  ApiQuotaLimit:
+    Type: String
+    Description: Api quota limit for this environment
+  ApiQuotaPeriod:
+    Type: String
+    Description: Api quota period for this environment
+    AllowedValues:
+      - DAY
+      - MONTH
+      - WEEK
+  ApiThrottleBurstLimit:
+    Type: String
+    Description: Api throttle burst limit for this environment
+  ApiThrottleRateLimit:
+    Type: String
+    Description: Api throttle rate limit (per second) for this environment
+  ApiCustomDomain:
+    Type: String
+    Description: Waitlist custom domain Name
+    Default: <custom_domain> #waitlist.api.mimbbo.com
