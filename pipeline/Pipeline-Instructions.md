@@ -1,4 +1,4 @@
-# Mimbbo-waitlist
+# <app_name>
 
 **This is an example of how to create a minimal pipeline for SAM based Serverless Apps**
 
