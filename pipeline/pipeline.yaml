@@ -15,18 +15,18 @@ Parameters:
   GithubRepo:
     Description: Gitub Repository name
     Type: AWS::SSM::Parameter::Value<String>
-    Default: /service/<pipeline_repo_name>/github/repo
+    Default: /service/<pipeline_repo_name>-pipeline/github/repo
 
   GithubToken:
     Description: Github OAuth Token with full permissions on admin:repo_hook and repo
     Type: AWS::SSM::Parameter::Value<String>
     NoEcho: true
-    Default: /service/<pipeline_repo_name>/github/token
+    Default: /service/<pipeline_repo_name>-pipeline/github/token
 
   GithubUser:
     Description: Github user where the repository lives
     Type: AWS::SSM::Parameter::Value<String>
-    Default: /service/<pipeline_repo_name>/github/user
+    Default: /service/<pipeline_repo_name>-pipeline/github/user
 
 Resources:
 
